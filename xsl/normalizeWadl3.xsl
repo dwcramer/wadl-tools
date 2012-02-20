@@ -115,9 +115,12 @@ This XSLT flattens or expands the path in the path attributes of the resource el
 			not(concat($opencurly,@name,$closecurly) = $path )">
  	</xsl:when>
 	<xsl:otherwise>
-	  <param>
+	  <xsl:copy  copy-namespaces="no">
+        <xsl:if test="not(contains(@type,':'))">
+	      <xsl:namespace name="" select="namespace-uri-from-QName(resolve-QName(@type, .))"/> 
+        </xsl:if>
 	    <xsl:apply-templates select="node() | @*[not(name(.) = 'rax:id')]" mode="tree-format"/>
-	  </param>
+	  </xsl:copy>
 	</xsl:otherwise>
       </xsl:choose>
     </xsl:template>
@@ -198,12 +201,13 @@ This XSLT flattens or expands the path in the path attributes of the resource el
     </xsl:template>
 
     <xsl:template match="wadl:resource[wadl:method]" mode="path-format">
+
         <resource>
             <xsl:copy-of select="@*"/>
             <xsl:attribute name="path">
                 <xsl:for-each select="ancestor-or-self::wadl:resource">
                     <xsl:sort order="ascending" select="position()"/>
-                    <xsl:value-of select="replace(@path,'^/(.+)/?$','$1')"/>
+                    <xsl:value-of select="replace(replace(@path,'^(.+)/$','$1'),'^/(.+)$','$1')"/>
                     <xsl:if test="not(position() = last())">/</xsl:if>
                 </xsl:for-each>
             </xsl:attribute>
