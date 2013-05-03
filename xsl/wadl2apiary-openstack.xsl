@@ -15,16 +15,25 @@
     </xsl:template>
     
    <xsl:template match="db:preface">
-       <xsl:apply-templates/>
+---       
+<xsl:apply-templates/>
+---       
    </xsl:template> 
+    
    <xsl:template match="db:title[parent::db:preface]"/>
    <xsl:template match="db:link">[<xsl:apply-templates/>](<xsl:value-of select="@xlink:href"/>)</xsl:template>
    <xsl:template match="db:citetitle">*<xsl:apply-templates/>*</xsl:template>
 
-<xsl:template match="db:chapter">
+<xsl:template match="db:chapter|db:section"><xsl:text>
+    
+</xsl:text>
 --
-<xsl:apply-templates/>
---</xsl:template>
+<xsl:value-of select="db:title"/><xsl:text>
+    
+</xsl:text><xsl:apply-templates select="db:para"/>--
+<xsl:apply-templates select="wadl:resource"/>
+<xsl:apply-templates select="db:section"/>    
+</xsl:template>
 
 <xsl:template match="wadl:method[parent::wadl:resource]">
         
@@ -56,9 +65,12 @@
         
     <xsl:template match="wadl:response[starts-with(@status,'2')]">
 &lt; <xsl:value-of select="tokenize(@status,' ')[1]"/> 
-<xsl:choose><xsl:when test="not(ancestor::wadl:method/@name = 'HEAD') and not(./wadl:representation[@mediaType = 'application/json'])">
+<xsl:choose><xsl:when test="not(ancestor::wadl:method/@name = 'HEAD') and 
+    not(./wadl:representation[@mediaType = 'application/json'])">
 &lt; Content-Type: application/json
+&lt;&lt;&lt;EOT
 {}
+EOT
 </xsl:when><xsl:when test="ancestor::wadl:method/@name = 'HEAD'"><xsl:text>
     
     
@@ -70,8 +82,12 @@
     
     <xsl:template match="wadl:representation">
 &lt; Content-Type: <xsl:value-of select="@mediaType"/><xsl:text>
-</xsl:text><xsl:if test="not(.//db:example/db:programlisting)">{}
-</xsl:if><xsl:value-of select=".//db:example/db:programlisting"/>       
+</xsl:text><xsl:choose><xsl:when test="not(.//db:example/db:programlisting)">&lt;&lt;&lt;EOT
+{}
+EOT
+</xsl:when><xsl:otherwise>&lt;&lt;&lt;EOT
+<xsl:value-of select=".//db:example/db:programlisting"/>
+EOT</xsl:otherwise></xsl:choose>       
     </xsl:template>
     <xsl:template match="text()"/>
     <xsl:template match="wadl:grammars"/>
