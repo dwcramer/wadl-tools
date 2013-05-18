@@ -3,11 +3,18 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:wadl="http://wadl.dev.java.net/2009/02"
     xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns:db="http://docbook.org/ns/docbook"
     exclude-result-prefixes="xs"
     version="2.0">
     
     <xsl:output method="text"/>
+    
+ 
+    
+    
+    
+
     
     <xsl:template match="db:book">HOST: http://localhost:5000<!--<xsl:value-of select="//wadl:resources/@base"/>-->        
 --- <xsl:value-of select="(//db:title)[1]"/> ---
@@ -43,14 +50,14 @@
 
 </xsl:if>        
 <xsl:for-each select="wadl:doc">
-<xsl:apply-templates select="db:para"/>
+<xsl:apply-templates select="db:para|html:p"/>
 </xsl:for-each><xsl:text>
            
 </xsl:text>
 <xsl:text>
     
 </xsl:text>        
-<xsl:value-of select="@name"/><xsl:text> </xsl:text><xsl:value-of select="parent::wadl:resource/@path"/>
+    <xsl:value-of select="@name"/><xsl:text> </xsl:text><xsl:value-of select="if (starts-with(parent::wadl:resource/@path, '/')) then parent::wadl:resource/@path else concat('/', parent::wadl:resource/@path)"/>
 <xsl:apply-templates select="wadl:request"/><xsl:apply-templates select="wadl:response"/>
     </xsl:template>
     
@@ -60,6 +67,7 @@
 <xsl:when test="wadl:representation[@mediaType = 'application/json']/wadl:doc/db:example/db:programlisting">
 <xsl:value-of select="normalize-space((wadl:representation[@mediaType = 'application/json']/wadl:doc/db:example/db:programlisting)[1])"/></xsl:when><xsl:otherwise/></xsl:choose>    
 </xsl:template>   
+
 
     <xsl:template match="wadl:response[not(starts-with(@status,'2'))]"/>
         
@@ -92,13 +100,15 @@ EOT</xsl:otherwise></xsl:choose>
     <xsl:template match="text()"/>
     <xsl:template match="wadl:grammars"/>
 
-<xsl:template match="db:para">
+<xsl:template match="db:para|html:p"><xsl:text>
+    
+</xsl:text>
 <xsl:value-of select="normalize-space(.)"/><xsl:text>
     
 </xsl:text>
 </xsl:template>
     
-    <xsl:template match="wadl:method[parent::wadl:application]|wadl:resource_type|wadl:param|db:para[@role='shortdesc']"/>
+    <xsl:template match="wadl:method[parent::wadl:application]|wadl:resource_type|wadl:param|db:para[@role='shortdesc' or parent::wadl:doc[parent::wadl:resource]]|html:p[@class='shortdesc' or parent::wadl:doc[parent::wadl:resource]]"/>
     <xsl:template match="wadl:method/text()|wadl:resources/text()|db:book/db:title"/>
     <xsl:template match="wadl:representation[not(@mediaType = 'application/json')]"/>
 </xsl:stylesheet>
