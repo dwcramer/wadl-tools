@@ -1,6 +1,7 @@
-package com.rackspace.cloud.api.wadl.cli
+package com.rackspace.cloud.api.wadl
 
 import java.io.File
+
 import org.fud.optparse._
 
 import scala.xml._
@@ -19,7 +20,6 @@ import javax.xml.transform.stream.StreamSource
 
 import java.io.FileNotFoundException
 
-import com.rackspace.cloud.api.wadl.WADLNormalizer
 import com.rackspace.cloud.api.wadl.WADLFormat._
 import com.rackspace.cloud.api.wadl.XSDVersion._
 import com.rackspace.cloud.api.wadl.RType._
@@ -53,6 +53,9 @@ object normalizeWadl {
 
         flag("-r", "--omit-resource_types", "Omit resource_types")
         { () => options += 'omitResourceTypes -> true }
+
+	// flag("-?", "--help","Print help")
+	// { () => options += 'help -> true }
       }
 
     val file_args = try{ 
@@ -61,40 +64,10 @@ object normalizeWadl {
 
     // println("Options: " + options)
     // println("File Args: " + file_args)
-    // if(file_args.length != 1) println("""
-    // 				      No wadl specified! 				      
+    if(file_args.length < 1 && file_args.length > 2) println("""
+Specify a wadl file and, optionally, an output file.
 
-    // 				      """ + cli.help)
-
-  def getSource : Source = {
-    var source : Source = null
-    val pwd = new File(".")
-    if (file_args.length != 1) {
-      // FIXME: What to do here? 
-      // Currently I get from the xsls: 
-      // XPTY0004: An empty sequence is not allowed as the second argument of resolve-uri()
-      // at xsl:apply-templates (#513)...
-      source = new StreamSource(System.in)
-    } else {
-      val inputFile = new File( pwd, file_args.head)
-      source = new StreamSource(inputFile.toURI().toString())
-    }
-    source
-  }
-
-  def getResult : Result = {
-    var result : Result = null
-    val pwd = new File(".")
-    if (file_args.length == 2) {
-      val resultFile = new File( pwd, file_args.tail.head)
-      System.out.println("FOOBAR: " + resultFile.toURI().toString())
-      // FIXME: This isn't working!!
-      result = new StreamResult(resultFile.toURI().toString())
-    } else {
-      result = new StreamResult(System.out)
-    }
-    result
-  }
+				      """ + cli.help)
 
 
    val format: com.rackspace.cloud.api.wadl.WADLFormat.Format = options('format) match {
@@ -116,11 +89,21 @@ object normalizeWadl {
 
    val wadl = new WADLNormalizer()
 
-   val result = new StreamResult(new File("foo.wadl"));
-    
-    // FIXME: Currently requires absolute path to source wadl.
-   val normWadl = wadl.normalize(getSource,
-				 getResult,
+    // Here I take the input of the wadl file and figure
+    // out whether it's an absolute path or relative
+    // and convert it to an absolute path. 
+    // I suspect there's a more elegant way to do this.
+    def stringToFile( path: String ) = {
+      if (new File(path).isAbsolute())
+	new File(path)
+      else
+	new File(System.getProperty("user.dir"), path)
+    }
+
+    val outFile = stringToFile( file_args.tail.head )
+
+    val normWadl = wadl.normalize("file://" + stringToFile(file_args.head).getAbsolutePath(),
+				 result,
    				 format, 
    				 version, 
    				 options('flatten).asInstanceOf[Boolean], 
@@ -128,7 +111,8 @@ object normalizeWadl {
 					      
    // TODO: 
    //  * Validate the generated wadl and xsds
-   //  * Control where output lands (same as current script? Add flexiblity?
+   //  * Base written xsd name on output file name not input file name.
+   //  * Add a switch for omitting docs
 
       // FIXME: Validate the result of the normalize rather than files on the file system?
       // TODO: Find all the xsds that match the naming pattern?

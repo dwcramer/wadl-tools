@@ -1,0 +1,7 @@
+* Tasks
+** TODO Find wadl.xsd from inside jar rather than absolute path
+** TODO Xerces for validating xsd 1.1
+   1. [ ] Inspect Jorge's code and see how he did it.
+   2. [ ] Implement in my code
+** TODO Figure out input file from stdin
+** TODO Figure out how to write to output file
