@@ -119,10 +119,12 @@
                     <json:string name="name"></json:string>
                     <json:string name="description"></json:string>
                     <json:array name="requests">
-                        <xsl:apply-templates select="request//xsdxt:sample"/>
+                        <xsl:apply-templates select="request//xsdxt:sample|request[not(xsdxt:sample)]//xsdxt:code|request//db:example"/>
+                        <xsl:apply-templates select="request/representation[not(.//xsdxt:code) and not(.//db:example)]"/>
                     </json:array>
                     <json:array name="responses">
-                        <xsl:apply-templates select="response//xsdxt:sample"/> 
+                        <xsl:apply-templates select="response//xsdxt:sample|request[not(xsdxt:sample)]//xsdxt:code|response//db:example"/> 
+                        <xsl:apply-templates select="response/representation[not(.//xsdxt:code) and not(.//db:example)]"/>
                         <!-- TODO: Get error codes too -->
                     </json:array>
                 </json:object>
@@ -130,9 +132,26 @@
         </json:object>
     </xsl:template>
     
-    <xsl:template match="xsdxt:sample">
+    <xsl:template match="representation">
         <json:object>
-            <json:string name="name"><xsl:value-of select="if(ancestor::representation/@status) then ancestor::representation/@status 
+            <json:string name="name"><xsl:value-of select="if(parent::response/@status) then parent::response/@status 
+                else if(wadl:doc/@title) then (wadl:doc/@title)[1]
+                else if(ancestor::method/@title) then concat(ancestor::method/@title, 'TODO XML or JSON Request')
+                else ''"/></json:string><!-- FIXME -->
+            <json:string name="description"><xsl:apply-templates select="wadl:doc/node()" mode="xml2markdown"/></json:string>
+            <json:object name="headers">
+                <json:object name="Content-Type">
+                    <json:string name="value"><xsl:value-of select="@mediaType"/></json:string>
+                </json:object>
+            </json:object>
+            <json:string name="body"/>
+            <json:string name="schema"/>
+        </json:object>
+    </xsl:template>
+        
+    <xsl:template match="xsdxt:sample|xsdxt:code|db:example">
+        <json:object>
+            <json:string name="name"><xsl:value-of select="if(ancestor::response/@status) then ancestor::response/@status 
                                                             else 
                                                              if(./xsdxt:code/@title) then ./xsdxt:code/@title else 
                                                              if(@title) then @title else 
@@ -151,6 +170,6 @@
         </json:object>
     </xsl:template>
     
-    <xsl:template match="doc" mode="xml2markdown"><!-- TODO FIXME --><xsl:value-of select="normalize-space(.)"/></xsl:template>
+    <xsl:template match="doc" mode="xml2markdown"><!-- TODO FIXME --><xsl:apply-templates select="node()" mode="escape-json"/></xsl:template>
    
 </xsl:stylesheet>
