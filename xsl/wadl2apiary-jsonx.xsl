@@ -14,12 +14,12 @@
     <!-- 
         TODOs:
             mode="xml2markdown"
-            handle enumerations in params
+            handle enumerations in params (grab from xsd)
                         
             Pipeline: 
-                1. Normalize
-                2. wadl2apiary-jsonx
-                3. jsonx2json
+                1. Run normalize.xsl in path format
+                2. Run wadl2apiary-jsonx xsl
+                3. Run jsonx2json xsl
     -->
     
     <xsl:param name="blueprint-version">1.0</xsl:param>
