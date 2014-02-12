@@ -59,11 +59,22 @@
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:json="http://www.ibm.com/xmlns/prod/2009/jsonx">
             <json:string name="_version"><xsl:value-of select="$blueprint-version"/></json:string>
+            <json:object name="metadata">
+                <json:object name="format">
+                    <json:string name="value">1A</json:string>
+                </json:object>
+            </json:object>
             <json:string name="name"><xsl:value-of select="doc/@title"/></json:string>
             <json:string name="description"><xsl:apply-templates select="doc" mode="xml2markdown"/></json:string>
             <!-- TODO: Support some kind of grouping mechanism. Maybe an attr on each resource that assigns it to a group? -->
-            <json:array name="resources">
-                <xsl:apply-templates select=".//resource"/>
+            <json:array name="resourceGroups">
+                <json:object>
+                    <json:string name="name"/>
+                    <json:string name="description"/>
+                    <json:array name="resources">
+                        <xsl:apply-templates select=".//resource[ancestor::resources and child::method]"/>
+                    </json:array>
+                </json:object>
             </json:array>
         </json:object>
     </xsl:template>
