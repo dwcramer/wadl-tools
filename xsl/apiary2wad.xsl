@@ -22,6 +22,7 @@
         <xsl:result-document href="{$wadlname}">
         <application xmlns="http://wadl.dev.java.net/2009/02"
             xmlns:wadl="http://wadl.dev.java.net/2009/02"
+            xmlns:xs="http://www.w3.org/2001/XMLSchema"
             xmlns:xlink="http://www.w3.org/1999/xlink"
             xmlns:xsdxt="http://docs.rackspacecloud.com/xsd-ext/v1.0"
             xmlns:raxapi="http://docs.rackspace.com/volume/api/v1">
@@ -69,7 +70,7 @@
     </xsl:template>
     
     <xsl:template match="xhtml:section[tokenize(@class, ' ') = 'resource']" mode="apiref">
-        <resource xmlns="http://wadl.dev.java.net/2009/02" href="{$wadlname}#{fn:clean-id(xhtml:hgroup/xhtml:a/@id)}"/>
+        <resource xmlns="http://wadl.dev.java.net/2009/02" href="{$wadlname}#{generate-id(xhtml:hgroup/xhtml:a/@id)}"/>
     </xsl:template>
 
     <!--
@@ -80,12 +81,10 @@
 
     <xsl:template match="xhtml:section[tokenize(@class, ' ') = 'resource']">
         <xsl:variable name="path" select="normalize-space(xhtml:hgroup/xhtml:h2)"/>
-        <xsl:variable name="header" select="normalize-space(xhtml:div[@class = 'content']/xhtml:section[@class='example']/xhtml:section[@class='code' and starts-with(@id,'generatedResourceCode')]/xhtml:section[@class = 'outgoingCall']/xhtml:pre[@class='outgoing outgoingHeaders'])"/>
-        <xsl:variable name="response-body" select="xhtml:div[@class = 'content']/xhtml:section[@class='example']/xhtml:section[@class='code' and starts-with(@id,'generatedResourceCode')]/xhtml:section[@class = 'outgoingCall']/xhtml:pre[@class='outgoing']/xhtml:code/text()"/>
-        <resource xmlns="http://wadl.dev.java.net/2009/02" path="{$path}" id="{fn:clean-id(xhtml:hgroup/xhtml:a/@id)}">
+        <resource xmlns="http://wadl.dev.java.net/2009/02" path="{translate(if(contains(@path,'?')) then substring-before($path,'?') else $path,' ','_')}" id="{generate-id(xhtml:hgroup/xhtml:a/@id)}">
            <xsl:for-each select="tokenize($path,'/')">
                 <xsl:if test="starts-with(.,'{')">
-                    <param name="{translate(.,'{}','')}" style="template" required="true"/>
+                    <param name="{translate(translate(.,'{}',''),' ','_')}" style="template" required="true"/>
                 </xsl:if>
            </xsl:for-each>
             
@@ -94,24 +93,35 @@
                    <xsl:copy-of select="xhtml:article/*"/>
                </doc>
                <request>
-                   <!-- TODO: query params? -->
+                   <xsl:if test="contains(@path,'?')">
+                       <xsl:for-each select="tokenize(substring-after(@path,'?'),'&amp;')">
+                           <param name="{substring-before(.,'=')}" style="query" type="xs:string"/>
+                       </xsl:for-each>
+                   </xsl:if>
                    <xsl:apply-templates select="xhtml:div[@class = 'content']" mode="request"/>
                </request>
-               <response status="{substring($header,1,3)}">
-                   <xsl:if test="not(normalize-space($response-body) = '')">
-                       <representation mediaType="application/json" element="noop">
-                           <doc xml:lang="en">
-                               <xsdxt:code>
-                                   <xsl:copy-of select="$response-body"/>
-                               </xsdxt:code>
-                           </doc>
-                       </representation>
-                   </xsl:if>
-               </response>
+               <xsl:apply-templates select="xhtml:div[@class = 'content']/xhtml:section[@class='example']/xhtml:section[@class='code' and starts-with(@id,'generatedResourceCode')]/xhtml:section[@class = 'outgoingCall']"/>
            </method> 
         </resource>
         
     </xsl:template>    
+    
+    <xsl:template match="xhtml:section[@class = 'outgoingCall']">
+        <xsl:variable name="header" select="normalize-space(xhtml:pre[@class='outgoing outgoingHeaders'])"/>
+        <xsl:variable name="response-body" select="xhtml:pre[@class = 'outgoing']/xhtml:code/text()"/>
+        
+        <response status="{substring($header,1,3)}">
+            <xsl:if test="not(normalize-space($response-body) = '')">
+                <representation mediaType="{substring-after($header, 'Content-Type: ')}">
+                    <doc xml:lang="en">
+                        <xsdxt:code>
+                            <xsl:copy-of select="$response-body"/>
+                        </xsdxt:code>
+                    </doc>
+                </representation>
+            </xsl:if>
+        </response>
+    </xsl:template>
     
     <xsl:function name="fn:clean-id" as="xs:string">
         <xsl:param name="id" as="xs:string"/>
