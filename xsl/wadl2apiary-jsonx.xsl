@@ -60,7 +60,7 @@
             xmlns:json="http://www.ibm.com/xmlns/prod/2009/jsonx">
             <json:string name="_version"><xsl:value-of select="$blueprint-version"/></json:string>
             <json:object name="metadata">
-                <json:object name="format">
+                <json:object name="FORMAT">
                     <json:string name="value">1A</json:string>
                 </json:object>
             </json:object>
@@ -70,7 +70,7 @@
             <json:array name="resourceGroups">
                 <json:object>
                     <json:string name="name"/>
-                    <json:string name="description"/>
+                    <json:string name="description">All Methods</json:string>
                     <json:array name="resources">
                         <xsl:apply-templates select=".//resource[ancestor::resources and child::method]"/>
                     </json:array>
