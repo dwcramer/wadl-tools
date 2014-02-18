@@ -116,7 +116,6 @@ Resolves hrefs on method and resource_type elements.
 			not(parent::wadl:application) and 
 			not(generate-id(.) = generate-id(current()) ) and 
 			@rax:id = current()/@rax:id]">
-					<xsl:message>[INFO] Modifying repeated id: <xsl:value-of select="@rax:id"/> to <xsl:value-of select="@id"/></xsl:message>
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:attribute name="id">
