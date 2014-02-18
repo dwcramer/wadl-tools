@@ -64,8 +64,8 @@
                     <json:string name="value">1A</json:string>
                 </json:object>
             </json:object>
-            <json:string name="name"><xsl:value-of select="doc/@title"/></json:string>
-            <json:string name="description"><xsl:apply-templates select="doc" mode="xml2markdown"/></json:string>
+            <json:string name="name"><xsl:value-of select="resources/doc/@title"/></json:string>
+            <json:string name="description"><xsl:apply-templates select="resources/doc" mode="xml2markdown"/></json:string>
             <!-- TODO: Support some kind of grouping mechanism. Maybe an attr on each resource that assigns it to a group? -->
             <json:array name="resourceGroups">
                 <json:object>
@@ -80,6 +80,7 @@
     </xsl:template>
         
     <xsl:template match="resource">
+            
         <json:object>
             <json:string name="name"><xsl:value-of select="normalize-space(doc/@title)"/></json:string>
             <json:string name="description"><xsl:apply-templates select="doc" mode="xml2markdown"/></json:string>
